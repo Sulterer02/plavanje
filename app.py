@@ -21,6 +21,7 @@ from sentence_transformers import SentenceTransformer
 from datetime import datetime
 from transformers import pipeline
 import base64
+import streamlit.components.v1 as components
 
 # --- Parsing functions unchanged from before ---
 
@@ -804,7 +805,7 @@ def enhanced_main():
         with st.expander("⚠️ System Status"):
             for issue in health_issues:
                 st.warning(issue)
-    tab1, tab2, tab3, tab4 = st.tabs(["📁 Upload", "❓ Questions", "📋 Manage", "📊 Analytics"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📁 Upload", "❓ Questions", "📋 Manage", "📊 Analytics", "🏊‍♂️ Swimmer Jump Game"])
     with tab1:
         st.header("📁 Document Upload & Conversion")
         uploaded_files = st.file_uploader(
@@ -845,6 +846,105 @@ def enhanced_main():
         show_document_manager()
     with tab4:
         show_document_stats()
+    with tab5:
+        st.header("🏊‍♂️ Swimmer Jump Game")
+        components.html('''
+        <style>
+        .game-container { width: 420px; margin: 0 auto; }
+        canvas { background: linear-gradient(135deg, #00bcd4 0%, #007ea7 50%, #003459 100%); border-radius: 18px; box-shadow: 0 8px 32px rgba(0,105,148,0.18); }
+        .game-btn { margin-top: 10px; background: #00bcd4; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        .game-btn:hover { background: #007ea7; }
+        </style>
+        <div class="game-container">
+            <canvas id="swimGame" width="400" height="180"></canvas>
+            <br>
+            <button class="game-btn" onclick="jump()">Jump 🏊‍♂️ (Space)</button>
+            <button class="game-btn" onclick="restartGame()" style="margin-left:10px; background:#007ea7;">Restart Game 🔄</button>
+            <div id="score" style="font-size:1.2rem; color:#fff; margin-top:8px;"></div>
+        </div>
+        <script>
+        let canvas = document.getElementById('swimGame');
+        let ctx = canvas.getContext('2d');
+        let swimmerY, swimmerV, gravity, jumpPower, isJumping, waveX, waveW, waveH, speed, score, gameOver, animationId;
+        function initGame() {
+            swimmerY = 120;
+            swimmerV = 0;
+            gravity = 0.7;
+            jumpPower = -10;
+            isJumping = false;
+            waveX = 400;
+            waveW = 30;
+            waveH = 30;
+            speed = 4;
+            score = 0;
+            gameOver = false;
+            document.getElementById('score').innerText = 'Score: 0';
+        }
+        function drawSwimmer() {
+            ctx.font = '2.5rem serif';
+            ctx.fillText('🏊‍♂️', 60, swimmerY);
+        }
+        function drawWave() {
+            ctx.font = '2.2rem serif';
+            ctx.fillText('🌊', waveX, 140);
+        }
+        function draw() {
+            ctx.clearRect(0,0,400,180);
+            drawSwimmer();
+            drawWave();
+            ctx.font = '1rem Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Score: ' + score, 320, 30);
+        }
+        function update() {
+            if (gameOver) return;
+            swimmerY += swimmerV;
+            swimmerV += gravity;
+            if (swimmerY > 120) { swimmerY = 120; swimmerV = 0; isJumping = false; }
+            waveX -= speed;
+            if (waveX < -waveW) {
+                waveX = 400 + Math.random()*60;
+                score++;
+                document.getElementById('score').innerText = 'Score: ' + score;
+            }
+            // Collision
+            if (waveX < 90 && waveX > 60 && swimmerY > 100) {
+                gameOver = true;
+                document.getElementById('score').innerText = 'Game Over! Final Score: ' + score;
+            }
+        }
+        function gameLoop() {
+            update();
+            draw();
+            if (!gameOver) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+        function jump() {
+            if (!isJumping && !gameOver) {
+                swimmerV = jumpPower;
+                isJumping = true;
+            }
+        }
+        function restartGame() {
+            if (animationId) cancelAnimationFrame(animationId);
+            initGame();
+            draw();
+            setTimeout(() => { gameLoop(); }, 200);
+        }
+        // Spacebar event
+        window.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+        // Initialize and start game on load
+        initGame();
+        draw();
+        setTimeout(() => { gameLoop(); }, 300);
+        </script>
+        ''', height=340)
     st.markdown("---")
     st.markdown("*Built with Streamlit • Powered by AI*")
 
