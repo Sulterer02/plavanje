@@ -8,3 +8,4 @@ docling
 plotly
 python-docx
 rich
+pysqlite3-binary  # ✅ Add this line
